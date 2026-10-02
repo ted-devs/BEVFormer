@@ -31,8 +31,8 @@ RUN rm -f /etc/apt/sources.list.d/cuda.list /etc/apt/sources.list.d/nvidia-ml.li
 ENV TORCH_CUDA_ARCH_LIST="6.0 6.1 7.0 7.5 8.0 8.6+PTX"
 ENV FORCE_CUDA="1"
 
-# Pin setuptools==59.5.0 to avoid distutils monkey-patching bug with PyTorch TensorBoard
-RUN pip install --no-cache-dir --upgrade pip "setuptools==59.5.0" wheel
+# Pin setuptools to avoid distutils deprecation issues in older OpenMMLab versions
+RUN pip install --no-cache-dir --upgrade pip "setuptools<60.0.0" wheel
 
 # Install MMCV-full with precompiled CUDA 11.3 + PyTorch 1.10 wheels
 RUN pip install --no-cache-dir mmcv-full==1.4.0 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html
@@ -63,10 +63,13 @@ RUN pip install --no-cache-dir \
     nuscenes-devkit \
     pyquaternion \
     shapely \
-    yapf==0.40.1
+    yapf
 
 # Install Detectron2 using official pre-compiled wheel for PyTorch 1.10 + CUDA 11.3
 RUN python -m pip install --no-cache-dir detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113/torch1.10/index.html
+
+# Pin setuptools and yapf to avoid distutils/verify runtime bugs
+RUN pip install --no-cache-dir "setuptools==59.5.0" "yapf==0.40.1"
 
 WORKDIR /workspace/BEVFormer
 CMD ["/bin/bash"]
