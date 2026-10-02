@@ -32,6 +32,7 @@ The proposed approach achieves the new state-of-the-art **56.9\%** in terms of N
 
 
 # Getting Started
+- [Docker Setup (Recommended)](docs/docker.md)
 - [Installation](docs/install.md) 
 - [Prepare Dataset](docs/prepare_dataset.md)
 - [Run and Eval](docs/getting_started.md)

@@ -8,6 +8,8 @@ from nuscenes.nuscenes import NuScenes
 from PIL import Image
 from nuscenes.utils.geometry_utils import view_points, box_in_image, BoxVisibility, transform_matrix
 from typing import Tuple, List, Iterable
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
@@ -296,6 +298,8 @@ def lidiar_render(sample_token, data,out_path=None):
 
     bbox_anns = data['results'][sample_token]
     for content in bbox_anns:
+        if content.get('detection_score', 0) < 0.2:
+            continue
         bbox_pred_list.append(DetectionBox(
             sample_token=content['sample_token'],
             translation=tuple(content['translation']),
@@ -463,15 +467,51 @@ def render_sample_data(
         ax[j + 2, ind].set_aspect('equal')
 
     if out_path is not None:
-        plt.savefig(out_path+'_camera', bbox_inches='tight', pad_inches=0, dpi=200)
+        save_path = out_path + '_camera.png' if not out_path.endswith('.png') else out_path
+        plt.savefig(save_path, bbox_inches='tight', pad_inches=0, dpi=200)
     if verbose:
         plt.show()
     plt.close()
 
 if __name__ == '__main__':
-    nusc = NuScenes(version='v1.0-trainval', dataroot='./data/nuscenes', verbose=True)
-    # render_annotation('7603b030b42a4b1caa8c443ccc1a7d52')
-    bevformer_results = mmcv.load('test/bevformer_base/Thu_Jun__9_16_22_37_2022/pts_bbox/results_nusc.json')
-    sample_token_list = list(bevformer_results['results'].keys())
-    for id in range(0, 10):
-        render_sample_data(sample_token_list[id], pred_data=bevformer_results, out_path=sample_token_list[id])
+    import argparse
+    import glob
+    import os
+
+    parser = argparse.ArgumentParser(description='Visualize BEVFormer 3D Detection Results')
+    parser.add_argument('--result-path', type=str, default=None, help='Path to results_nusc.json')
+    parser.add_argument('--version', type=str, default='v1.0-mini', help='nuScenes version (e.g. v1.0-mini, v1.0-trainval)')
+    parser.add_argument('--root-path', type=str, default='./data/nuscenes', help='nuScenes data root')
+    parser.add_argument('--out-dir', type=str, default='./test/visual', help='Directory to save visualization images')
+    parser.add_argument('--num-samples', type=int, default=5, help='Number of samples to visualize')
+    parser.add_argument('--sample-tokens', nargs='+', type=str, default=None, help='Specific sample token(s) to render')
+    args = parser.parse_args()
+
+    # Find result file if not specified
+    if args.result_path is None:
+        candidates = glob.glob('test/**/results_nusc.json', recursive=True)
+        if candidates:
+            candidates.sort(key=os.path.getmtime, reverse=True)
+            args.result_path = candidates[0]
+            print(f'Auto-detected results file: {args.result_path}')
+        else:
+            raise FileNotFoundError('No results_nusc.json found. Please specify --result-path or run dist_test.sh first.')
+
+    print(f'Loading nuScenes {args.version} from {args.root_path}...')
+    nusc = NuScenes(version=args.version, dataroot=args.root_path, verbose=True)
+
+    print(f'Loading detection results from {args.result_path}...')
+    bevformer_results = mmcv.load(args.result_path)
+
+    os.makedirs(args.out_dir, exist_ok=True)
+
+    if args.sample_tokens:
+        sample_token_list = args.sample_tokens
+    else:
+        sample_token_list = list(bevformer_results['results'].keys())[:args.num_samples]
+
+    print(f'Rendering {len(sample_token_list)} sample(s) to {args.out_dir}...')
+    for idx, sample_token in enumerate(tqdm(sample_token_list)):
+        out_prefix = os.path.join(args.out_dir, f'sample_{idx}_{sample_token[:8]}')
+        render_sample_data(sample_token, pred_data=bevformer_results, out_path=out_prefix, verbose=False)
+    print(f'Done! Visualizations saved to {args.out_dir}')

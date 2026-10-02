@@ -1,0 +1,25 @@
+# Datasets and model checkpoints
+data/
+ckpts/
+work_dirs/
+test/
+
+# Git and caches
+.git/
+.cache/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archive and weights files
+*.pth
+*.pt
+*.bin
+*.zip
+*.tar
+*.tar.gz
+
+# Local config and environment files
+.env
+.env.*
+!.env.example

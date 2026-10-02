@@ -15,7 +15,9 @@ from projects.mmdet3d_plugin.dd3d.datasets.nuscenes import NuscenesDataset as DD
 @DATASETS.register_module()
 class CustomNuScenesDatasetV2(NuScenesDataset):
     def __init__(self, frames=(),mono_cfg=None, overlap_test=False,*args, **kwargs):
+        version = kwargs.pop('version', 'v1.0-trainval')
         super().__init__(*args, **kwargs)
+        self.version = version
         self.frames = frames
         self.queue_length = len(frames)
         self.overlap_test = overlap_test

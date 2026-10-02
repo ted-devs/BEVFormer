@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  bevformer:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: bevformer:latest
+    container_name: bevformer
+    working_dir: /workspace/BEVFormer
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128
+    volumes:
+      # Mount project codebase
+      - .:/workspace/BEVFormer
+      # Mount dataset from a separate disk or folder (defaults to ./data on host)
+      - ${DATA_DIR:-./data}:/workspace/BEVFormer/data
+      # Mount checkpoints from a separate disk or folder (defaults to ./ckpts on host)
+      - ${CKPTS_DIR:-./ckpts}:/workspace/BEVFormer/ckpts
+      # Persistent cache for torchvision backbones (avoids re-downloading ResNet weights)
+      - ${TORCH_CACHE:-./.cache/torch}:/root/.cache/torch
+    # Crucial for PyTorch dataloaders to avoid shared memory bus error
+    ipc: host
+    ports:
+      - "6006:6006"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    stdin_open: true
+    tty: true
+    command: /bin/bash

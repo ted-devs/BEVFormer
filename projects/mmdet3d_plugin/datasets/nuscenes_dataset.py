@@ -23,7 +23,9 @@ class CustomNuScenesDataset(NuScenesDataset):
     """
 
     def __init__(self, queue_length=4, bev_size=(200, 200), overlap_test=False, *args, **kwargs):
+        version = kwargs.pop('version', 'v1.0-trainval')
         super().__init__(*args, **kwargs)
+        self.version = version
         self.queue_length = queue_length
         self.overlap_test = overlap_test
         self.bev_size = bev_size

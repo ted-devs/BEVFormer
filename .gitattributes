@@ -1,0 +1,3 @@
+# Ensure bash scripts maintain Linux line endings even when cloned on Windows
+*.sh text eol=lf
+*.bash text eol=lf

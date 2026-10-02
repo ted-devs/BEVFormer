@@ -33,6 +33,8 @@ def cal_train_time(log_dicts, args):
 def plot_curve(log_dicts, args):
     if args.backend is not None:
         plt.switch_backend(args.backend)
+    elif args.out is not None:
+        plt.switch_backend('Agg')
     sns.set_style(args.style)
     # if legend is None, use {filename}_{key} as legend
     legend = args.legend
@@ -47,6 +49,9 @@ def plot_curve(log_dicts, args):
     num_metrics = len(metrics)
     for i, log_dict in enumerate(log_dicts):
         epochs = list(log_dict.keys())
+        if not epochs:
+            print(f'Skipping {args.json_logs[i]} (no training steps recorded)')
+            continue
         for j, metric in enumerate(metrics):
             print(f'plot curve of {args.json_logs[i]}, metric is {metric}')
             if metric not in log_dict[epochs[args.interval - 1]]:
