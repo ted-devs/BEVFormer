@@ -267,6 +267,6 @@ log_config = dict(
         dict(type='TensorboardLoggerHook')
     ])
 
-fp16 = dict(loss_scale=512.)
+fp16 = dict(loss_scale='dynamic')
 checkpoint_config = dict(interval=1)
 custom_hooks = [dict(type='TransferWeight',priority='LOWEST')]

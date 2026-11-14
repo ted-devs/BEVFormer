@@ -116,6 +116,7 @@ class HungarianAssigner3D(BaseAssigner):
         cost = cls_cost + reg_cost
         
         # 3. do Hungarian matching on CPU using linear_sum_assignment
+        cost = torch.nan_to_num(cost, nan=100.0, posinf=100.0, neginf=-100.0)
         cost = cost.detach().cpu()
         if linear_sum_assignment is None:
             raise ImportError('Please run "pip install scipy" '
